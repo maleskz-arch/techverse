@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Системное программирование: Лекция и Практикум</title>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; color: #333; overflow: hidden; }
+        .slides-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; outline: none; }
+        .slide { display: none; width: 85%; height: 85%; background: #fff; padding: 40px 60px; box-sizing: border-box; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow-y: auto; }
+        .slide.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h1 { color: #2c3e50; font-size: 3.2em; border-bottom: 4px solid #3498db; padding-bottom: 10px; margin-top: 0; }
+        h2 { color: #e74c3c; font-size: 2.5em; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        h3 { color: #2980b9; font-size: 2em; }
+        p, li { font-size: 1.6em; line-height: 1.6; color: #444; }
+        
+        .box { padding: 25px; margin: 20px 0; border-radius: 10px; border-left: 8px solid; }
+        .box-info { background-color: #e8f4f8; border-color: #3498db; }
+        .box-warning { background-color: #fdf5e6; border-color: #f39c12; }
+        .box-danger { background-color: #fdedec; border-color: #e74c3c; }
+        .box-success { background-color: #eafaf1; border-color: #2ecc71; }
+        
+        .mission-title { color: #27ae60; font-size: 2.2em; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
+        
+        pre { background-color: #282c34; color: #abb2bf; padding: 25px; border-radius: 10px; font-size: 1.4em; overflow-x: auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        code { font-family: 'Consolas', monospace; }
+        .comment { color: #7f848e; font-style: italic; }
+        
+        .controls { position: absolute; bottom: 20px; width: 100%; text-align: center; color: #888; font-size: 1.4em; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 20px; }
+        .nav-btn { background: #3498db; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold; transition: 0.2s; }
+        .nav-btn:hover { background: #2980b9; transform: scale(1.05); }
+        .progress-bar { height: 8px; background: #2ecc71; position: absolute; top: 0; left: 0; transition: width 0.3s ease; }
+        
+        .huge-text { font-size: 3em; text-align: center; color: #2c3e50; margin-top: 15%; font-weight: bold; }
+        .center-text { text-align: center; }
+    </style>
+</head>
+<body tabindex="0"> <div class="progress-bar" id="progressBar"></div>
+
+<div class="slides-container" id="slides">
+
+    <div class="slide active">
+        <h1>Системное программирование</h1>
+        <h2>Архитектура ОС, процессы, потоки и синхронизация</h2>
+        <br><br>
+        <p><strong>Формат:</strong> Лекция + Практикум (180 минут).</p>
+        <p><strong>Дисциплина:</strong> Системное программное обеспечение.</p>
+        <p>В рамках данного занятия мы рассмотрим фундаментальные механизмы управления ресурсами в современных операционных системах, межпроцессное взаимодействие (IPC) и алгоритмы предотвращения взаимных блокировок.</p>
+        <p class="center-text" style="color: #888; font-size: 1.2em; margin-top: 50px;">Используйте стрелки ⬅️ ➡️ или Пробел для навигации</p>
+    </div>
+
+    <div class="slide">
+        <h2>Инструментарий и стандарты</h2>
+        <div class="box box-warning">
+            <p><strong>Важное техническое замечание:</strong></p>
+            <ul>
+                <li><strong>Стандарт C++11 (Потоки, Мьютексы, STL):</strong> Является кроссплатформенным. Практические задания выполняются локально в <strong>Visual Studio</strong>.</li>
+                <li><strong>Стандарт POSIX (Процессы, Каналы):</strong> Специфичен для UNIX-подобных систем. В среде Windows функции <code>fork()</code> и <code>pipe()</code> недоступны. Для выполнения этих заданий используется онлайн-компилятор <strong>onlinegdb.com</strong> (среда выполнения Linux).</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="slide">
+        <h2>Концепция системных вызовов</h2>
+        <p>Операционная система функционирует в привилегированном режиме (Kernel Mode), в то время как прикладные программы ограничены пользовательским режимом (User Mode).</p>
+        <p>Для выполнения любых критических операций (выделение памяти, файловый ввод-вывод, создание процессов) прикладная программа инициирует программное прерывание — <strong>Системный вызов (System Call)</strong>, передавая управление ядру ОС.</p>
+    </div>
+
+    <div class="slide">
+        <p class="huge-text">ГЛАВА 1<br><span style="color: #e74c3c;">КОНЦЕПЦИЯ ПРОЦЕССОВ</span></p>
+    </div>
+
+    <div class="slide">
+        <h2>Определение процесса</h2>
+        <p>Исполняемый файл на диске является статичным набором инструкций. </p>
+        <div class="box box-info">
+            <p><strong>Процесс</strong> — это экземпляр программы в стадии выполнения. Это активная сущность, которой операционная система выделяет системные ресурсы.</p>
+        </div>
+        <p>Каждый процесс обладает собственным, строго изолированным <strong>виртуальным адресным пространством</strong>.</p>
+        <p></p>
+    </div>
+
+    <div class="slide">
+        <h2>Изоляция адресных пространств</h2>
+        <p>ОС гарантирует, что один процесс не может получить прямой доступ к памяти другого процесса без использования специальных механизмов межпроцессного взаимодействия (IPC).</p>
+        <ul>
+            <li>Обеспечивает стабильность системы (ошибка сегментации в одном процессе не нарушает работу ядра ОС или других процессов).</li>
+            <li>Обеспечивает безопасность данных (предотвращение несанкционированного чтения).</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>Идентификация процессов (PID)</h2>
+        <p>Для управления процессами ядро ОС поддерживает внутреннюю таблицу процессов (Process Table).</p>
+        <p>Каждому создаваемому процессу присваивается уникальный целочисленный идентификатор — <strong>PID (Process ID)</strong>.</p>
+        <p>В POSIX-системах PID процесса можно получить с помощью системного вызова <code>getpid()</code>.</p>
+    </div>
+
+    <div class="slide">
+        <h2>Создание процессов: системный вызов fork()</h2>
+        <p>В UNIX-подобных ОС (стандарт POSIX) создание нового процесса реализуется путем клонирования текущего процесса с помощью системного вызова <code>fork()</code>.</p>
+        <p>Вызывающий процесс становится <strong>Родителем (Parent)</strong>, а созданный процесс — <strong>Потомком (Child)</strong>.</p>
+        <p></p>
+    </div>
+
+    <div class="slide">
+        <h2>Механика системного вызова fork()</h2>
+        <div class="box box-success">
+            <ol>
+                <li>Выполнение процесса-родителя приостанавливается.</li>
+                <li>Ядро ОС создает точную копию адресного пространства родителя для потомка (с использованием механизма Copy-On-Write в современных ОС).</li>
+                <li>Оба процесса (и родитель, и потомок) возобновляют выполнение инструкции, <strong>следующей непосредственно за вызовом fork()</strong>.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="slide">
+        <h2>Возвращаемые значения fork()</h2>
+        <p>Поскольку оба процесса продолжают выполнение одного и того же кода, им необходим механизм идентификации их текущей роли.</p>
+        <p>Системный вызов <code>fork()</code> возвращает значения типа <code>pid_t</code>:</p>
+        <ul>
+            <li><strong>> 0</strong>: Возвращается процессу-родителю (содержит PID созданного потомка).</li>
+            <li><strong>0</strong>: Возвращается процессу-потомку.</li>
+            <li><strong>-1</strong>: Ошибка создания процесса.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>Листинг кода: Применение fork()</h2>
+        <pre><code><span class="keyword">#include</span> &lt;iostream&gt;
+<span class="keyword">#include</span> &lt;unistd.h&gt;
+<span class="keyword">#include</span> &lt;sys/wait.h&gt;
+
+<span class="keyword">int</span> main() {
+    pid_t pid = fork(); <span class="comment">// Точка разветвления выполнения</span>
+
+    <span class="keyword">if</span> (pid == <span class="number">0</span>) {
+        <span class="comment">// Контекст процесса-потомка</span>
+        std::cout &lt;&lt; <span class="string">"[Потомок] Выполнение дочернего процесса.\n"</span>;
+    } 
+    <span class="keyword">else</span> <span class="keyword">if</span> (pid &gt; <span class="number">0</span>) {
+        <span class="comment">// Контекст процесса-родителя</span>
+        wait(NULL); <span class="comment">// Ожидание завершения потомка (предотвращение зомби-процессов)</span>
+        std::cout &lt;&lt; <span class="string">"[Родитель] Потомок с PID "</span> &lt;&lt; pid &lt;&lt; <span class="string">" завершен.\n"</span>;
+    }
+    
+    <span class="keyword">return</span> <span class="number">0</span>;
+}</code></pre>
+    </div>
+
+    <div class="slide">
+        <h2>Доказательство изоляции памяти</h2>
+        <p>Продемонстрируем независимость адресных пространств:</p>
+        <pre><code><span class="keyword">int</span> shared_var = <span class="number">100</span>;
+pid_t pid = fork();
+
+<span class="keyword">if</span> (pid == <span class="number">0</span>) {
+    shared_var -= <span class="number">50</span>; <span class="comment">// Изменяется ТОЛЬКО копия в памяти потомка</span>
+} 
+<span class="keyword">else</span> <span class="keyword">if</span> (pid &gt; <span class="number">0</span>) {
+    wait(NULL);
+    <span class="comment">// У родителя shared_var остается равной 100</span>
+}</code></pre>
+    </div>
+
+    <div class="slide">
+        <h2>Недостатки многопрограммности на основе процессов</h2>
+        <ul>
+            <li><strong>Высокие накладные расходы:</strong> Создание процесса требует выделения памяти и копирования структур данных ядра.</li>
+            <li><strong>Сложность обмена данными (IPC):</strong> Изоляция памяти требует использования сложных системных механизмов (каналы, сокеты, разделяемая память) для обмена информацией между процессами.</li>
+        </ul>
+        <p>Для решения этих проблем была введена концепция потоков выполнения.</p>
+    </div>
+
+    <div class="slide">
+        <p class="huge-text">ГЛАВА 2<br><span style="color: #3498db;">ПОТОКИ ВЫПОЛНЕНИЯ (THREADS)</span></p>
+    </div>
+
+    <div class="slide">
+        <h2>Определение потока</h2>
+        <div class="box box-info">
+            <p><strong>Поток (Thread)</strong> — это наименьшая единица обработки, исполнение которой может быть назначено планировщиком операционной системы.</p>
+        </div>
+        <p>Потоки часто называют "легковесными процессами". В рамках одного процесса может параллельно выполняться множество потоков.</p>
+    </div>
+
+    <div class="slide">
+        <h2>Архитектура памяти потоков</h2>
+        <p>Фундаментальное отличие потоков от процессов заключается в работе с памятью:</p>
+        <ul>
+            <li><strong>Общие ресурсы (Shared):</strong> Все потоки одного процесса делят общее адресное пространство, сегмент данных, кучу (heap) и открытые файловые дескрипторы.</li>
+            <li><strong>Локальные ресурсы (Private):</strong> Каждый поток имеет собственный стек (stack), программный счетчик (PC) и набор регистров процессора.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>Преимущества и риски многопоточности</h2>
+        <div class="box box-success">
+            <p><strong>Преимущества:</strong></p>
+            <ul>
+                <li>Снижение накладных расходов на создание и контекстное переключение (Context Switch).</li>
+                <li>Мгновенный обмен данными через глобальные переменные.</li>
+            </ul>
+        </div>
+        <div class="box box-danger">
+            <p><strong>Риски:</strong></p>
+            <ul>
+                <li>Фатальное исключение (например, Segmentation Fault) в одном потоке приводит к аварийному завершению всего процесса.</li>
+                <li>Необходимость строгой синхронизации доступа к общим данным.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="slide">
+        <h2>Многопоточность в стандарте C++11</h2>
+        <p>Стандарт C++11 абстрагирует разработчика от специфичных для ОС вызовов (таких как <code>pthread_create</code> в POSIX или <code>CreateThread</code> в WinAPI) с помощью класса <code>std::thread</code>.</p>
+        <p>Для инициализации потока достаточно передать объект вызываемого типа (функцию, лямбда-выражение, функтор) в конструктор <code>std::thread</code>.</p>
+    </div>
+
+    <div class="slide">
+        <h2>Листинг кода: std::thread</h2>
+        <pre><code><span class="keyword">#include</span> &lt;iostream&gt;
+<span class="keyword">#include</span> &lt;thread&gt;
+
+<span class="keyword">void</span> background_task() {
+    std::cout &lt;&lt; <span class="string">"Выполнение фоновой задачи...\n"</span>;
+}
+
+<span class="keyword">int</span> main() {
+    <span class="comment">// Создание и немедленный запуск потока</span>
+    std::thread t1(background_task); 
+    
+    <span class="comment">// Синхронизация с главным потоком</span>
+    t1.join(); 
+    
+    <span class="keyword">return</span> <span class="number">0</span>;
+}</code></pre>
+    </div>
+
+    <div class="slide">
+        <h2>Метод join() и синхронизация завершения</h2>
+        <p>Вызов метода <code>join()</code> блокирует выполнение вызывающего потока (в данном случае <code>main</code>) до тех пор, пока целевой поток не завершит свою работу.</p>
+        <p><strong>Критическое правило:</strong> Если главный поток завершит выполнение (достигнет <code>return 0</code>) до завершения дочерних потоков, исполняющая среда C++ вызовет <code>std::terminate()</code>, что приведет к аварийному завершению программы.</p>
+    </div>
+
+    <div class="slide">
+        <h2>Передача аргументов в поток</h2>
+        <p>Конструктор <code>std::thread</code> поддерживает вариативные шаблоны, что позволяет передавать аргументы в целевую функцию через запятую.</p>
+        <pre><code><span class="keyword">void</span> process_data(<span class="keyword">int</span> id, std::string param) {
+    std::cout &lt;&lt; <span class="string">"Поток ID: "</span> &lt;&lt; id &lt;&lt; <span class="string">", Параметр: "</span> &lt;&lt; param &lt;&lt; <span class="string">"\n"</span>;
+}
+
+<span class="keyword">int</span> main() {
+    std::thread worker(process_data, <span class="number">101</span>, <span class="string">"INIT"</span>); 
+    worker.join();
+    <span class="keyword">return</span> <span class="number">0</span>;
+}</code></pre>
+    </div>
+
+    <div class="slide">
+        <p class="huge-text">ГЛАВА 3<br><span style="color: #f39c12;">ВЗАИМОИСКЛЮЧЕНИЯ И ГОНКИ ДАННЫХ</span></p>
+    </div>
+
+    <div class="slide">
+        <h2>Состояние гонки (Race Condition)</h2>
+        <p>Совместное использование адресного пространства потоками порождает фундаментальную проблему синхронизации.</p>
+        <div class="box box-warning">
+            <p><strong>Состояние гонки</strong> — это ошибка проектирования многопоточной системы, при которой порядок выполнения (планирования) потоков операционной системой непредсказуемо влияет на результат выполнения программы.</p>
+        </div>
+        <p></p>
+    </div>
+
+    <div class="slide">
+        <h2>Неатомарность операций (Read-Modify-Write)</h2>
+        <p>Рассмотрим простую операцию инкремента: <code>counter++</code>.</p>
+        <p>На уровне машинных инструкций процессора эта операция не является атомарной (неделимой). Она состоит из трех этапов:</p>
+        <ol>
+            <li><strong>READ:</strong> Загрузка значения из ОЗУ в регистр процессора.</li>
+            <li><strong>MODIFY:</strong> Инкремент значения в регистре (АЛУ).</li>
+            <li><strong>WRITE:</strong> Запись нового значения из регистра обратно в ОЗУ.</li>
+        </ol>
+    </div>
+
+    <div class="slide">
+        <h2>Сценарий возникновения коллизии</h2>
+        <p>Допустим, начальное значение <code>counter = 0</code>.</p>
+        <div class="box box-danger">
+            <ul>
+                <li><strong>Поток 1</strong> выполняет фазу READ: загружает 0 в регистр.</li>
+                <li><em>Контекстное переключение (Interrupt)</em>.</li>
+                <li><strong>Поток 2</strong> выполняет READ (загружает 0), MODIFY (0+1=1) и WRITE (записывает 1 в память).</li>
+                <li>Управление возвращается <strong>Потоку 1</strong>. Он продолжает с фазы MODIFY: использует свой регистр (0+1=1) и выполняет WRITE (записывает 1).</li>
+            </ul>
+        </div>
+        <p><strong>Результат:</strong> Два потока выполнили инкремент, но значение счетчика равно 1 вместо 2. Произошла потеря данных.</p>
+    </div>
+
+    <div class="slide">
+        <p class="huge-text">ГЛАВА 4<br><span style="color: #2ecc71;">ПРИМИТИВЫ СИНХРОНИЗАЦИИ (MUTEX)</span></p>
+    </div>
+
+    <div class="slide">
+        <h2>Критические секции и Взаимное исключение</h2>
+        <p>Участок кода, в котором происходит обращение к разделяемому ресурсу, называется <strong>критической секцией</strong>.</p>
+        <p>Для предотвращения состояния гонки необходимо обеспечить <strong>Взаимное исключение (Mutual Exclusion)</strong> — гарантию того, что в любой момент времени только один поток может выполнять код критической секции.</p>
+    </div>
+
+    <div class="slide">
+        <h2>Объект синхронизации Mutex</h2>
+        <p>В C++ основным примитивом синхронизации является <code>std::mutex</code>.</p>
+        <ul>
+            <li>Поток, намеревающийся войти в критическую секцию, должен <strong>захватить</strong> мьютекс (вызов <code>lock()</code>).</li>
+            <li>Если мьютекс уже захвачен другим потоком, текущий поток переводится планировщиком ОС в состояние <strong>ожидания (Blocked)</strong>.</li>
+            <li>При выходе из секции поток <strong>освобождает</strong> мьютекс (вызов <code>unlock()</code>), пробуждая ожидающие потоки.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>Идиома RAII и std::lock_guard</h2>
+        <p>Прямой вызов <code>lock()</code> и <code>unlock()</code> считается плохой практикой в C++, так как исключение, выброшенное внутри критической секции, приведет к тому, что мьютекс никогда не будет освобожден (Deadlock).</p>
+        <p>Для безопасного управления блокировкой используется шаблон-обертка <code>std::lock_guard</code>. Он захватывает мьютекс в конструкторе и <strong>гарантированно</strong> освобождает его в деструкторе (при выходе из области видимости).</p>
+    </div>
+
+    <div class="slide">
+        <h2>Листинг кода: Безопасный инкремент</h2>
+        <pre><code><span class="keyword">#include</span> &lt;mutex&gt;
+
+std::mutex mtx; <span class="comment">// Глобальный примитив синхронизации</span>
+<span class="keyword">int</span> shared_counter = <span class="number">0</span>;
+
+<span class="keyword">void</span> safe_increment() {
+    <span class="comment">// Захват мьютекса на время выполнения блока функции</span>
+    std::lock_guard&lt;std::mutex&gt; lock(mtx); 
+    
+    <span class="comment">// Критическая секция защищена</span>
+    shared_counter++; 
+}</code></pre>
+    </div>
+
+    <div class="slide">
+        <h2 class="mission-title">Практическое задание №1</h2>
+        <div class="box box-info">
+            <p><strong>Тема:</strong> Синхронизация потоков.</p>
+            <p><strong>Среда:</strong> Visual Studio (C++11).</p>
+        </div>
+        <p><strong>Задача:</strong></p>
+        <ol>
+            <li>Объявите глобальную переменную <code>int account = 0;</code></li>
+            <li>Реализуйте функцию, выполняющую цикл на 100 000 итераций инкремента переменной <code>account</code>.</li>
+            <li>В <code>main()</code> создайте массив из 4 объектов <code>std::thread</code>, передав им данную функцию.</li>
+        </ol>
+    </div>
+
+    <div class="slide">
+        <h2 class="mission-title">Практическое задание №1 (Продолжение)</h2>
+        <p><strong>Ход выполнения:</strong></p>
+        <ol>
+            <li>Скомпилируйте программу <strong>без использования</strong> мьютексов. Запустите несколько раз и зафиксируйте наличие состояния гонки (некорректный итоговый результат).</li>
+            <li>Модифицируйте код, добавив <code>std::mutex</code> и защитив инкремент с помощью <code>std::lock_guard</code>.</li>
+            <li>Убедитесь, что после применения синхронизации результат всегда строго равен 400 000.</li>
+        </ol>
+    </div>
+
+    <div class="slide">
+        <p class="huge-text">ГЛАВА 5<br><span style="color: #9b59b6;">МЕЖПРОЦЕССНОЕ ВЗАИМОДЕЙСТВИЕ (IPC)</span></p>
+    </div>
+
+    <div class="slide">
+        <h2>Механизмы IPC</h2>
+        <p>Поскольку процессы имеют изолированные адресные пространства, ОС предоставляет специализированные механизмы <strong>IPC (Inter-Process Communication)</strong> для передачи данных.</p>
+        <ul>
+            <li>Разделяемая память (Shared Memory)</li>
+            <li>Очереди сообщений (Message Queues)</li>
+            <li>Сокеты (Sockets)</li>
+            <li><strong>Анонимные каналы (Pipes)</strong></li>
+        </ul>
+        <p></p>
+    </div>
+
+    <div class="slide">
+        <h2>Анонимные каналы (Pipes)</h2>
+        <p>Канал представляет собой однонаправленный буфер данных (FIFO), управляемый ядром ОС.</p>
+        <p>Системный вызов <code>pipe(int fd[2])</code> инициализирует канал и возвращает два файловых дескриптора:</p>
+        <ul>
+            <li><code>fd[0]</code> — дескриптор, открытый для <strong>чтения (Read)</strong>.</li>
+            <li><code>fd[1]</code> — дескриптор, открытый для <strong>записи (Write)</strong>.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2>Жизненный цикл канала</h2>
+        <p>Обычно канал используется для связи между родственными процессами (Родитель -> Потомок).</p>
+        <p>Алгоритм использования:</p>
+        <ol>
+            <li>Вызов <code>pipe()</code> до клонирования процесса.</li>
+            <li>Вызов <code>fork()</code> (оба процесса наследуют дескрипторы канала).</li>
+            <li>Пишущий процесс закрывает дескриптор <code>fd[0]</code> и пишет в <code>fd[1]</code>.</li>
+            <li>Читающий процесс закрывает дескриптор <code>fd[1]</code> и читает из <code>fd[0]</code>.</li>
+        </ol>
+    </div>
+
+    <div class="slide">
+        <h2>Листинг кода: Передача данных через pipe</h2>
+        <pre><code><span class="keyword">int</span> fd[<span class="number">2</span>]; pipe(fd);
+pid_t pid = fork();
+
+<span class="keyword">if</span> (pid &gt; <span class="number">0</span>) { 
+    close(fd[<span class="number">0</span>]); <span class="comment">// Родитель пишет</span>
+    <span class="keyword">int</span> data = <span class="number">2026</span>;
+    write(fd[<span class="number">1</span>], &data, <span class="keyword">sizeof</span>(data)); 
+    close(fd[<span class="number">1</span>]);
+} 
+<span class="keyword">else</span> <span class="keyword">if</span> (pid == <span class="number">0</span>) { 
+    close(fd[<span class="number">1</span>]); <span class="comment">// Потомок читает</span>
+    <span class="keyword">int</span> buffer;
+    <span class="comment">// Блокирующий системный вызов чтения</span>
+    read(fd[<span class="number">0</span>], &buffer, <span class="keyword">sizeof</span>(buffer)); 
+    std::cout &lt;&lt; <span class="string">"Получено по IPC: "</span> &lt;&lt; buffer;
+    close(fd[<span class="number">0</span>]);
+}</code></pre>
+    </div>
+
+    <div class="slide">
+        <h2 class="mission-title">Практическое задание №2</h2>
+        <div class="box box-warning">
+            <p><strong>Тема:</strong> IPC через каналы.</p>
+            <p><strong>Среда:</strong> onlinegdb.com (POSIX).</p>
+        </div>
+        <p><strong>Постановка задачи:</strong></p>
+        <p>Организовать передачу массива данных между процессом-родителем и процессом-потомком.</p>
+    </div>
+
+    <div class="slide">
+        <h2 class="mission-title">Практическое задание №2 (Алгоритм)</h2>
+        <ol>
+            <li>Инициализируйте <code>pipe(fd)</code> и выполните <code>fork()</code>.</li>
+            <li>В контексте родительского процесса объявите массив: <code>int arr[5] = {10, 20, 30, 40, 50};</code> и передайте его в канал с помощью <code>write</code>. Обратите внимание на корректное закрытие неиспользуемых дескрипторов.</li>
+            <li>В контексте дочернего процесса объявите буферный массив <code>int recv[5];</code> и выполните чтение из канала с помощью <code>read</code>.</li>
+            <li>Вычислите сумму элементов полученного массива и выведите результат на стандартный поток вывода.</li>
+        </ol>
+    </div>
+
+    <div class="slide">
+        <p class="huge-text">ГЛАВА 6<br><span style="color: #34495e;">ТУПИКИ (DEADLOCKS) И АЛГОРИТМ БАНКИРА</span></p>
+    </div>
+
+    <div class="slide">
+        <h2>Взаимные блокировки (Deadlocks)</h2>
+        <p>Использование примитивов синхронизации предотвращает гонки данных, но порождает новую проблему распределения ресурсов.</p>
+        <div class="box box-danger">
+            <p><strong>Deadlock (Тупик)</strong> — состояние системы, при котором группа потоков/процессов находится в бесконечном ожидании ресурсов, удерживаемых другими потоками из этой же группы.</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <h2>Условия Коффмана (Coffman Conditions)</h2>
+        <p>Теоретически доказано, что тупик возникает тогда и только тогда, когда одновременно выполняются 4 условия:</p>
+        <ol>
+            <li><strong>Взаимное исключение:</strong> Ресурс не может использоваться совместно (монопольный доступ).</li>
+            <li><strong>Удержание и ожидание:</strong> Процесс удерживает ранее выделенные ресурсы, запрашивая новые.</li>
+            <li><strong>Отсутствие вытеснения:</strong> Ресурс не может быть принудительно изъят ОС.</li>
+            <li><strong>Круговое ожидание:</strong> Существует замкнутая цепь процессов, ожидающих ресурсы друг от друга.</li>
+        </ol>
+    </div>
+
+    <div class="slide">
+        <h2>Предотвращение тупиков: Алгоритм Банкира</h2>
+        <p>Алгоритм Банкира, разработанный Эдсгером Дейкстрой, предназначен для избежания тупиков путем анализа запросов на ресурсы.</p>
+        <p>Планировщик ОС анализирует состояние системы. Ресурс выделяется процессу <strong>только в том случае</strong>, если это переведет систему в <em>Безопасное состояние (Safe State)</em>.</p>
+        <p></p>
+    </div>
+
+    <div class="slide">
+        <h2>Структуры данных Алгоритма Банкира</h2>
+        <p>Математическая модель алгоритма опирается на следующие матрицы и векторы:</p>
+        <ul>
+            <li><strong>Available (Доступно):</strong> Вектор длины R (типы ресурсов), содержащий количество свободных экземпляров.</li>
+            <li><strong>Max (Максимум):</strong> Матрица N x R, определяющая максимальную потребность каждого процесса.</li>
+            <li><strong>Allocation (Выделено):</strong> Матрица N x R, содержащая текущее распределение ресурсов.</li>
+            <li><strong>Need (Потребность):</strong> Матрица, вычисляемая как <code>Need[i][j] = Max[i][j] - Allocation[i][j]</code>.</li>
+        </ul>
+    </div>
+
+    <div class="slide">
+        <h2 class="mission-title">Практическое задание №3</h2>
+        <div class="box box-info">
+            <p><strong>Тема:</strong> Реализация алгоритма Банкира.</p>
+            <p><strong>Среда:</strong> Visual Studio (C++).</p>
+        </div>
+        <p><strong>Задача:</strong></p>
+        <p>Разработать программный модуль, который на основе матриц распределения ресурсов определяет, находится ли система в безопасном состоянии (т.е. существует ли безопасная последовательность выполнения процессов).</p>
+    </div>
+
+    <div class="slide">
+        <h2 class="mission-title">Практическое задание №3 (Исходные данные)</h2>
+        <p>Используйте следующие статические данные для инициализации в функции <code>main</code>:</p>
+        <pre><code><span class="keyword">const int</span> P = <span class="number">5</span>; <span class="comment">// Количество процессов</span>
+<span class="keyword">const int</span> R = <span class="number">3</span>; <span class="comment">// Количество типов ресурсов</span>
+
+<span class="keyword">int</span> available[R] = {<span class="number">3</span>, <span class="number">3</span>, <span class="number">2</span>};
+
+<span class="keyword">int</span> allocation[P][R] = { 
+    {<span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>}, {<span class="number">2</span>, <span class="number">0</span>, <span class="number">0</span>}, {<span class="number">3</span>, <span class="number">0</span>, <span class="number">2</span>}, {<span class="number">2</span>, <span class="number">1</span>, <span class="number">1</span>}, {<span class="number">0</span>, <span class="number">0</span>, <span class="number">2</span>} 
+};
+
+<span class="keyword">int</span> max[P][R] = { 
+    {<span class="number">7</span>, <span class="number">5</span>, <span class="number">3</span>}, {<span class="number">3</span>, <span class="number">2</span>, <span class="number">2</span>}, {<span class="number">9</span>, <span class="number">0</span>, <span class="number">2</span>}, {<span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>}, {<span class="number">4</span>, <span class="number">3</span>, <span class="number">3</span>} 
+};</code></pre>
+    </div>
+
+    <div class="slide">
+        <h2 class="mission-title">Практическое задание №3 (Алгоритм)</h2>
+        <ol>
+            <li>Вычислите матрицу <code>need[P][R]</code>.</li>
+            <li>Реализуйте цикл поиска процесса <code>i</code>, который еще не завершен (флаг <code>finish[i] == false</code>) и для которого выполняется условие <code>need[i][j] <= available[j]</code> для всех типов ресурсов.</li>
+            <li>При нахождении такого процесса, обновите вектор <code>available</code>, добавив к нему <code>allocation[i]</code>, и установите <code>finish[i] = true</code>.</li>
+            <li>Если все процессы успешно отмечены как завершенные, выведите "Система в безопасном состоянии".</li>
+        </ol>
+    </div>
+
+    <div class="slide">
+        <h2>Итоги лекционно-практического занятия</h2>
+        <div class="box box-success">
+            <ul>
+                <li>Изучена архитектура управления памятью и жизненный цикл процессов ОС.</li>
+                <li>Освоены механизмы создания потоков и распараллеливания задач в стандарте C++11.</li>
+                <li>Проанализированы риски гонки данных и реализована синхронизация критических секций с использованием мьютексов (RAII).</li>
+                <li>Изучены методы межпроцессного взаимодействия (IPC) на базе анонимных каналов.</li>
+                <li>Реализована математическая модель алгоритма Дейкстры для предотвращения тупиков.</li>
+            </ul>
+        </div>
+        <p class="center-text" style="font-size: 1.5em; font-weight: bold; margin-top: 30px;">Лекция завершена.</p>
+    </div>
+
+</div>
+
+<div class="controls">
+    <button class="nav-btn" id="prevBtn">⬅ Назад</button>
+    <span id="counter">Слайд 1 из N</span>
+    <button class="nav-btn" id="nextBtn">Вперед ➡</button>
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('counter');
+    const progressBar = document.getElementById('progressBar');
+    let currentSlide = 0;
+
+    // Установка фокуса на body для корректного перехвата клавиатуры
+    document.body.focus();
+
+    function updateSlide(index) {
+        if(index >= slides.length) currentSlide = slides.length - 1;
+        else if(index < 0) currentSlide = 0;
+        else currentSlide = index;
+        
+        slides.forEach(s => s.classList.remove('active'));
+        slides[currentSlide].classList.add('active');
+        
+        counter.innerText = `Слайд ${currentSlide + 1} из ${slides.length}`;
+        progressBar.style.width = ((currentSlide + 1) / slides.length * 100) + '%';
+        slides[currentSlide].scrollTop = 0;
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => { updateSlide(currentSlide - 1); document.body.focus(); });
+    document.getElementById('nextBtn').addEventListener('click', () => { updateSlide(currentSlide + 1); document.body.focus(); });
+
+    // Обработка событий клавиатуры с блокировкой прокрутки экрана
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight' || e.code === 'Space') {
+            e.preventDefault();
+            updateSlide(currentSlide + 1);
+        }
+        else if(e.key === 'ArrowLeft') {
+            e.preventDefault();
+            updateSlide(currentSlide - 1);
+        }
+    });
+
+    updateSlide(0);
+</script>
+
+</body>
+</html>
