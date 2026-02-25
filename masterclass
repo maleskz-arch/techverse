@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Python Masterclass: Python Turtle (Full)</title>
+    <style>
+        body { margin: 0; background: #111; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
+        
+        /* Слайд */
+        .slide { display: none; height: 100vh; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; }
+        .active { display: flex; }
+        
+        /* Типографика */
+        h1 { font-size: 3.5rem; color: #00ff9d; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0, 255, 157, 0.3); }
+        h2 { font-size: 2.2rem; color: #aaa; margin-bottom: 30px; font-weight: 300; }
+        p, li { font-size: 1.8rem; line-height: 1.6; max-width: 900px; color: #ddd; }
+        ul { text-align: left; list-style-type: square; display: inline-block; }
+        li { margin-bottom: 15px; }
+        
+        /* Код */
+        .code { background: #1a1a1a; padding: 25px; border-left: 6px solid #00ff9d; font-family: 'Consolas', monospace; font-size: 1.6rem; text-align: left; width: 80%; max-width: 900px; white-space: pre-wrap; margin: 30px 0; color: #a6e22e; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 0 10px 10px 0; }
+        .comment { color: #75715e; }
+        
+        /* Элементы */
+        .controls { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 20px; z-index: 10; }
+        button { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #333; color: #fff; border: none; border-radius: 5px; transition: 0.3s; }
+        button:hover { background: #00ff9d; color: #000; }
+        
+        .slide-number { position: absolute; bottom: 30px; left: 30px; font-size: 1.2rem; color: #555; font-family: monospace; }
+        .accent { color: #ff0055; font-weight: bold; }
+        
+        /* Рамки заданий */
+        .task-box { border: 3px dashed #00ff9d; padding: 40px; background: rgba(0, 255, 157, 0.05); width: 80%; border-radius: 15px; }
+        .bonus-box { border: 3px dashed #ff0055; padding: 40px; background: rgba(255, 0, 85, 0.05); width: 80%; border-radius: 15px; }
+        
+        /* Визуал */
+        .grid-visual { width: 400px; height: 300px; border: 2px solid #555; position: relative; background: linear-gradient(90deg, #333 1px, transparent 1px), linear-gradient(#333 1px, transparent 1px); background-size: 40px 40px; display: flex; align-items: center; justify-content: center; margin: 20px; }
+        .grid-visual::after { content: '(0,0)'; background: #000; padding: 5px; border: 1px solid #555; }
+        .big-emoji { font-size: 6rem; margin: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="slide active"><h1>Python Geometry</h1><h2>Мастер-класс: Python Turtle /h2><p>Программирование графики с нуля</p><div class="big-emoji">🐍 + 🎨</div></div>
+
+<div class="slide"><h1>Цели на 60 минут</h1><ul><li>📍 Понять, как компьютер видит координаты.</li><li>🔄 Научиться использовать циклы.</li><li>🧠 Написать код, который рисует за нас.</li></ul></div>
+
+<div class="slide"><h1>Почему Python?</h1><p>Это не просто "учебный" язык. На нем работают:</p><ul><li>🚀 <b>Роскосмос и Yandex </b> (расчет траекторий)</li><li>🤖 <b>Искусственный Интеллект</b> (Gigachat)</li><li>🎮 <b>Rutube и VK </b> (серверы)</li></ul></div>
+
+<div class="slide"><h1>Наш Инструмент</h1><p>Мы используем библиотеку <b>Turtle</b> (Черепашка).</p><div class="code">import turtle
+
+t = turtle.Turtle()
+t.shape("turtle")
+t.speed(0) <span class="comment"># Максимальная скорость</span></div></div>
+
+<div class="slide"><h1>Экран — это карта</h1><p>Компьютер не понимает "в центре". Он понимает цифры.</p><div class="grid-visual"></div><p>Центр экрана — это точка <b>(0, 0)</b>.</p></div>
+
+<div class="slide"><h1>Ось X и Ось Y</h1><p>Запомните навигацию:</p><ul><li>👉 <b>X (Вправо/Влево):</b><br>+100 это право, -100 это лево.</li><li>👆 <b>Y (Вверх/Вниз):</b><br>+100 это вверх, -100 это вниз.</li></ul></div>
+
+<div class="slide"><h1>Телепортация</h1><p>Команда <code>goto(x, y)</code> переносит черепашку в точку.</p><div class="code">t.goto(150, 200)   <span class="comment"># Верхний правый угол</span>
+t.goto(-150, -200) <span class="comment"># Нижний левый угол</span></div></div>
+
+<div class="slide"><h1>Проблема "Грязного следа"</h1><p>Когда черепаха ползет, она оставляет линию. Как переместиться чисто?</p><ul><li><code>t.penup()</code> — Поднять перо (летим).</li><li><code>t.pendown()</code> — Опустить перо (рисуем).</li></ul></div>
+
+<div class="slide"><h1>Движение и Повороты</h1><div class="code">t.forward(100)   <span class="comment"># Вперед (пиксели)</span>
+t.backward(50)   <span class="comment"># Назад</span>
+
+t.left(90)       <span class="comment"># Поворот влево (градусы)</span>
+t.right(45)      <span class="comment"># Поворот вправо</span></div></div>
+
+<div class="slide"><h1>Задача №1: Квадрат</h1><p>Напишите код <b>линейно</b> (в лоб).</p><div class="code">t.forward(100)
+t.left(90)
+t.forward(100)
+t.left(90)
+t.forward(100)
+t.left(90)
+t.forward(100)</div></div>
+
+<div class="slide"><h1>Принцип DRY</h1><h2 class="accent">Don't Repeat Yourself</h2><p>Не повторяйся! Если ты копируешь код (Ctrl+C, Ctrl+V) — ты делаешь что-то не так.</p></div>
+
+<div class="slide"><h1>Спасение: Цикл FOR</h1><p>Эта команда заставляет компьютер повторять действия.</p><div class="code">for i in range(4):
+    t.forward(100)
+    t.left(90)</div></div>
+
+<div class="slide"><h1>Анатомия Цикла</h1><ul><li><code>for i</code> — запускаем счетчик.</li><li><code>in range(4)</code> — сколько раз повторить (4 раза).</li><li><code>:</code> — <b>ДВОЕТОЧИЕ</b> (Вход в цикл).</li></ul></div>
+
+<div class="slide"><h1>Магия Отступов (Tab)</h1><p class="accent">В Python отступы решают всё!</p><div class="code">for i in range(4):
+    t.forward(100)  <span class="comment"># Внутри цикла (повторится)</span>
+    
+print("End")        <span class="comment"># Без отступа (сработает 1 раз)</span></div></div>
+
+<div class="slide"><h1>🐞 Найди ошибку</h1><div class="code">import turtle
+t = turtle.Turtle()
+
+for i in range(4)
+t.forward(100)
+t.left(90)</div><p>Чего не хватает?</p></div>
+
+<div class="slide"><h1>Ответ на тест</h1><p>1. Нет двоеточия <b>:</b> после range.<br>2. Нет отступа перед командами движения.</p></div>
+
+<div class="slide"><h1>Математика Углов</h1><p>Черепаха должна сделать полный оборот (360°).</p><ul><li>Квадрат (4 угла): 360 / 4 = <b>90°</b></li><li>Треугольник (3 угла): 360 / 3 = <b>120°</b></li><li>Шестиугольник (6 углов): 360 / 6 = <b>60°</b></li></ul></div>
+
+<div class="slide"><h1>Задача №2: Соты</h1><p>Нарисуйте шестиугольник, используя цикл.</p><div class="code">for i in range(6):
+    t.forward(100)
+    t.left(60)</div></div>
+
+<div class="slide"><h1>Круг</h1><p>Круг — это многоугольник с огромным числом углов. Но в Python есть готовая команда:</p><div class="code">t.circle(100)</div><p>Число 100 — это радиус.</p></div>
+
+<div class="slide"><h1>Переменные</h1><p>Чтобы менять размер фигуры в одном месте.</p><div class="code">size = 150 <span class="comment"># Создали коробку "size"</span>
+
+t.forward(size)
+t.left(90)
+t.forward(size)</div></div>
+
+<div class="slide"><h1>Краски</h1><div class="code">t.pencolor("red")      <span class="comment"># Цвет линии</span>
+t.pensize(5)           <span class="comment"># Толщина линии</span>
+turtle.bgcolor("black") <span class="comment"># Цвет фона</span></div></div>
+
+<div class="slide"><h1>Заливка (Fill)</h1><div class="code">t.fillcolor("yellow")
+
+t.begin_fill()   <span class="comment"># Начали закрашивать</span>
+t.circle(50)     <span class="comment"># Нарисовали контур</span>
+t.end_fill()     <span class="comment"># Закончили (залили краской)</span></div></div>
+
+<div class="slide"><h1>🚀 Практика: Уровень 1</h1><div class="task-box"><h3>Геометрический суп</h3><ol><li>Нарисуй красный квадрат.</li><li>Подними перо (penup) и отлети в сторону.</li><li>Нарисуй желтый круг, залитый цветом.</li></ol></div></div>
+
+<div class="slide"><h1>Спираль</h1><p>Что если менять переменную внутри цикла?</p><div class="code">x = 10
+for i in range(50):
+    t.forward(x)
+    t.left(90)
+    x = x + 10  <span class="comment"># Увеличиваем шаг</span></div></div>
+
+<div class="slide"><h1>Спирограф</h1><p>Цикл внутри цикла. Фигура, которая вращается.</p><div class="code">for i in range(12):
+    t.circle(100)  <span class="comment"># Рисуем круг</span>
+    t.left(30)     <span class="comment"># Поворачиваемся</span></div></div>
+
+<div class="slide"><h1>⚔️ Hard Task: Олимпийские кольца</h1><div class="task-box">Нарисуй 5 пересекающихся колец.<br>Цвета: Синий, Черный, Красный, Желтый, Зеленый.<br><br><b>Подсказка:</b> Используй список координат и список цветов.</div></div>
+
+<div class="slide"><h1>Решение: Олимпийские кольца (Часть 1)</h1><p>Создаем списки координат и цветов.</p><div class="code">positions = [(-110, -25), (0, -25), (110, -25), (-55, -75), (55, -75)]
+
+colors = ["blue", "black", "red", "yellow", "green"]
+
+t.pensize(5)</div></div>
+
+<div class="slide"><h1>Решение: Олимпийские кольца (Часть 2)</h1><p>Запускаем цикл на 5 повторений.</p><div class="code">for i in range(5):
+    t.penup()
+    t.goto(positions[i]) <span class="comment"># Летим в точку из списка</span>
+    t.pendown()
+    
+    t.pencolor(colors[i]) <span class="comment"># Берем цвет из списка</span>
+    t.circle(45)</div></div>
+
+<div class="slide"><h1>⚔️ Hard Task: Звезда</h1><div class="task-box">Нарисуй классическую 5-конечную звезду.<br><b>Секрет:</b> Угол поворота = 144 градуса.</div></div>
+
+<div class="slide"><h1>Код Звезды</h1><div class="code">t.pencolor("gold")
+t.begin_fill()
+
+for i in range(5):
+    t.forward(200)
+    t.right(144)
+
+t.end_fill()</div></div>
+
+<div class="slide"><h1>⚔️ Hard Task: Снежинка</h1><div class="task-box">Используй цикл range(6).<br>Алгоритм луча:<br>Вперед -> Рисуем "рогатку" -> Назад -> Поворот 60°.</div></div>
+
+<div class="slide"><h1>Код Снежинки</h1><div class="code">for i in range(6):
+    t.forward(100)
+    # Рисуем кончик
+    t.left(45); t.forward(30); t.backward(30); t.right(90)
+    t.forward(30); t.backward(30); t.left(45)
+    
+    t.backward(100) # Вернулись в центр
+    t.right(60)     # Поворот для следующего луча</div></div>
+
+<div class="slide"><h1>🔥 LEVEL UP: Доп. задания</h1><p>Для тех, кто справился раньше всех.</p></div>
+
+<div class="slide"><h1>Задача: Светофор 🚦</h1><div class="bonus-box"><h3>ТЗ (Техническое задание):</h3><ol><li>Нарисуй серый прямоугольник (корпус).</li><li>Внутри нарисуй 3 круга (Красный, Желтый, Зеленый).</li><li>Используй заливку (fill).</li><li><b>Челлендж:</b> Сделай это, используя переменные для координат Y.</li></ol></div></div>
+
+<div class="slide"><h1>Задача: Лестница в небо 🪜</h1><div class="bonus-box"><h3>ТЗ:</h3><ol><li>Спроси у пользователя: "Сколько ступенек?"</li><li><code>n = int(input("Сколько? "))</code></li><li>В цикле построй лесенку вверх и вправо.</li><li>Каждая ступенька должна быть другого цвета (используй список colors и оператор %).</li></ol></div></div>
+
+<div class="slide"><h1>Задача: Фрактальное дерево 🌳</h1><div class="bonus-box"><h3>ТЗ (Для гениев):</h3><p>Дерево — это ветка, на конце которой растут еще две маленькие ветки.</p><ol><li>Нарисуй "Y".</li><li>На концах "Y" нарисуй еще более маленькие "Y".</li><li>Используй функцию (def) и рекурсию, если знаешь как.</li></ol></div></div>
+
+<div class="slide"><h1>Что мы выучили?</h1><ul><li>✅ <b>Coordinates:</b> Как управлять позицией (X, Y).</li><li>✅ <b>Loops:</b> Как автоматизировать рутину.</li><li>✅ <b>Lists:</b> Как хранить цвета и координаты.</li><li>✅ <b>Logic:</b> Как разбить сложную фигуру на простые шаги.</li></ul></div>
+
+<div class="slide"><h1>Домашнее задание</h1><div class="task-box"><h3>Проект "Pixel Art"</h3><p>Нарисовать узнаваемого персонажа (из Minecraft, Mario или Among Us), используя только квадраты и команду <code>goto</code>.</p></div></div>
+
+<div class="slide"><h1>Спасибо за урок!</h1><div class="big-emoji">💻 🚀 👋</div><h2>Вопросы?</h2></div>
+
+<div class="controls">
+    <button onclick="prevSlide()">⬅ Назад</button>
+    <div id="slide-info" style="align-self: center; font-family: monospace; font-size: 1.2rem;">1 / 42</div>
+    <button onclick="nextSlide()">Вперед ➡</button>
+</div>
+
+<script>
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const info = document.getElementById('slide-info');
+
+    function show(index) {
+        slides.forEach(s => s.classList.remove('active'));
+        if (index >= slides.length) index = slides.length - 1;
+        if (index < 0) index = 0;
+        slides[index].classList.add('active');
+        current = index;
+        info.innerText = (current + 1) + " / " + slides.length;
+    }
+
+    function nextSlide() { show(current + 1); }
+    function prevSlide() { show(current - 1); }
+
+    // Управление клавиатурой
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+        if(e.key === 'ArrowLeft') prevSlide();
+    });
+    
+    show(0);
+</script>
+
+</body>
+</html>
