@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ветроэнергетика: Расширенная версия (Без птиц)</title>
+    <style>
+        /* БАЗОВЫЕ НАСТРОЙКИ */
+        :root {
+            --primary: #27ae60;
+            --secondary: #2980b9;
+            --bg: #2c3e50;
+            --card: #ecf0f1;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* ОБОЛОЧКА СЛАЙДА */
+        .slide-container {
+            width: 95%;
+            height: 95%;
+            background: var(--card);
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* СТРУКТУРА СЛАЙДА */
+        .slide {
+            display: none;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .slide.active {
+            display: flex;
+            flex-direction: row;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ЛЕВАЯ ЧАСТЬ (ТЕКСТ) */
+        .text-part {
+            flex: 1.3;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+            border-right: 2px solid #bdc3c7;
+        }
+
+        h1 { color: #16a085; font-size: 2.8em; margin: 0 0 10px 0; line-height: 1.1; }
+        h2 { color: #2c3e50; font-size: 2.2em; margin-bottom: 20px; border-left: 6px solid var(--primary); padding-left: 15px; }
+        
+        p { font-size: 1.3em; line-height: 1.6; color: #555; margin-bottom: 20px; }
+        
+        ul, ol { font-size: 1.25em; line-height: 1.5; color: #444; padding-left: 30px; }
+        li { margin-bottom: 15px; }
+        
+        strong { color: var(--primary); font-weight: 700; }
+
+        /* ПРАВАЯ ЧАСТЬ (ГРАФИКА) */
+        .visual-part {
+            flex: 1;
+            background: linear-gradient(135deg, #dfe6e9 0%, #ffffff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- ГРАФИКА CSS (ВЕТРЯКИ) --- */
+        .turbine-wrapper { position: relative; width: 180px; height: 280px; display: flex; justify-content: center; align-items: flex-end; margin: 0 10px; }
+        
+        .pole { width: 10px; height: 160px; background: #7f8c8d; border-radius: 4px; }
+        
+        .rotor {
+            position: absolute; top: 30px; width: 200px; height: 200px;
+            animation: spin 4s linear infinite; z-index: 2;
+        }
+        
+        .hub {
+            position: absolute; width: 16px; height: 16px; background: #2c3e50;
+            border-radius: 50%; top: 92px; left: 92px; z-index: 10;
+        }
+
+        .blade {
+            position: absolute; width: 12px; height: 90px; background: var(--primary);
+            left: 94px; top: 2px; border-radius: 50% 50% 4px 4px; transform-origin: bottom center;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 3 Лопасти */
+        .rotor-3 .blade:nth-child(1) { transform: rotate(0deg); }
+        .rotor-3 .blade:nth-child(2) { transform: rotate(120deg); }
+        .rotor-3 .blade:nth-child(3) { transform: rotate(240deg); }
+
+        /* 4 Лопасти */
+        .rotor-4 .blade:nth-child(1) { transform: rotate(0deg); background: var(--secondary); }
+        .rotor-4 .blade:nth-child(2) { transform: rotate(90deg); background: var(--secondary); }
+        .rotor-4 .blade:nth-child(3) { transform: rotate(180deg); background: var(--secondary); }
+        .rotor-4 .blade:nth-child(4) { transform: rotate(270deg); background: var(--secondary); }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Иконки и эмодзи */
+        .emoji-big { font-size: 7rem; margin: 10px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        /* УПРАВЛЕНИЕ */
+        .controls { position: absolute; bottom: 20px; right: 30px; z-index: 100; }
+        button {
+            background: var(--bg); color: white; border: none; padding: 12px 25px;
+            font-size: 1.1em; cursor: pointer; border-radius: 8px; margin-left: 10px;
+            transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        button:hover { background: var(--primary); transform: translateY(-2px); }
+        
+        .counter { position: absolute; bottom: 20px; left: 30px; font-size: 1.1em; color: #7f8c8d; font-weight: bold; }
+        .progress { position: absolute; bottom: 0; left: 0; height: 6px; background: var(--primary); transition: width 0.3s; }
+
+    </style>
+</head>
+<body>
+
+<div class="slide-container">
+
+    <div class="slide active">
+        <div class="text-part">
+            <h1>Повелители Ветра</h1>
+            <p style="font-size: 1.5em; color: #7f8c8d;">Откуда берется электричество в розетке, если не сжигать уголь?</p>
+            <hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;">
+            <p><strong>Тема урока:</strong> Возобновляемая энергетика</p>
+            <p><strong>Докладчик:</strong> Александр Владимирович</p>
+        </div>
+        <div class="visual-part">
+            <div class="turbine-wrapper">
+                <div class="rotor rotor-3"><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="hub"></div></div>
+                <div class="pole"></div>
+            </div>
+            <div style="font-size: 6rem; position: absolute; top: 50px; left: 50px; opacity: 0.3;">💨</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Глобальная проблема энергетики</h2>
+            <p>Сегодня 70% всей энергии мы получаем, сжигая ископаемое топливо.</p>
+            <ul>
+                <li><strong>Исчерпаемость:</strong> Нефти и газа осталось на 50-70 лет. Наши внуки могут их не увидеть.</li>
+                <li><strong>Экология:</strong> Сжигание угля выбрасывает тонны CO2. Это создает "парниковое одеяло" вокруг Земли.</li>
+                <li><strong>Последствия:</strong> Таяние ледников, изменение климата, грязный воздух в городах.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big" style="animation: none;">🏭</div>
+            <p style="color: #c0392b; font-weight: bold; font-size: 1.5rem;">Загрязнение</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Альтернатива: Силы природы</h2>
+            <p>Возобновляемые источники энергии (ВИЭ) — это ресурсы, которые природа восстанавливает сама и бесконечно.</p>
+            <ul>
+                <li>☀️ <strong>Солнце:</strong> Дает энергию через солнечные панели.</li>
+                <li>🌊 <strong>Вода:</strong> Крутит турбины ГЭС.</li>
+                <li>💨 <strong>Ветер:</strong> Невидим, но обладает колоссальной мощью.</li>
+            </ul>
+            <p>Сегодня мы говорим именно о ветре — самом быстрорастущем источнике энергии.</p>
+        </div>
+        <div class="visual-part">
+            <div style="font-size: 4rem;">☀️ 🌊 💨</div>
+            <p style="margin-top: 20px;">Бесконечная энергия</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Ветер в истории человечества</h2>
+            <p>Человек приручил ветер задолго до электричества.</p>
+            <ul>
+                <li><strong>Паруса (5000 лет назад):</strong> Египтяне использовали ветер для движения кораблей.</li>
+                <li><strong>Персия (200 г. до н.э.):</strong> Первые ветряные мельницы с вертикальной осью (как карусель) для помола зерна.</li>
+                <li><strong>Европа (Средние века):</strong> Классические мельницы мололи муку, пилили бревна и даже делали бумагу.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big">⛵</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Символ Голландии 🇳🇱</h2>
+            <p>Почему в Нидерландах так много мельниц?</p>
+            <ul>
+                <li>Треть страны находится ниже уровня моря.</li>
+                <li>Мельницы использовались как <strong>насосы</strong>.</li>
+                <li>Они веками откачивали воду с полей, спасая страну от затопления.</li>
+                <li>Именно там придумали поворачивать «шапку» мельницы навстречу ветру.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big">🌷</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>От мельницы к турбине</h2>
+            <p>В 1887 году Чарльз Браш построил первую мельницу, которая вырабатывала ток, а не муку. Она была огромной и слабой (всего 12 кВт).</p>
+            <p><strong>Современный ветряк (ВЭУ):</strong></p>
+            <ul>
+                <li>Мощность одной турбины: до 15 Мегаватт (хватит на 15,000 домов).</li>
+                <li>Материалы: Космические сплавы, углепластик, стекловолокно.</li>
+                <li>Управление: Полностью цифровое.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div style="font-size: 3rem;">🏚️ ➡️ 🚀</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Анатомия гиганта</h2>
+            <p>Ветрогенератор состоит из трех главных частей:</p>
+            <ol>
+                <li><strong>Башня:</strong> Стальная труба высотой до 150-200 метров. Чем выше — тем сильнее и ровнее ветер.</li>
+                <li><strong>Гондола:</strong> «Мозг» и «сердце» машины наверху. Внутри находится генератор, тормозная система и электроника.</li>
+                <li><strong>Ротор с лопастями:</strong> Улавливает кинетическую энергию ветра.</li>
+            </ol>
+        </div>
+        <div class="visual-part">
+            <div class="turbine-wrapper" style="transform: scale(1.2);">
+                <div class="rotor rotor-3"><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="hub"></div></div>
+                <div class="pole"></div>
+            </div>
+            <div style="position: absolute; top: 60px; right: 50px; background: white; padding: 5px; border-radius: 5px;">⬅ Гондола</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Они просто ГИГАНТСКИЕ</h2>
+            <p>С земли ветряк кажется игрушечным, но давайте сравним:</p>
+            <ul>
+                <li><strong>Высота:</strong> Современные морские ветряки (260м) выше главного здания МГУ и в 3 раза выше Статуи Свободы.</li>
+                <li><strong>Лопасть:</strong> Длина одной лопасти превышает 100 метров. Это длиннее футбольного поля!</li>
+                <li>Человек на фоне гондолы выглядит как муравей.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div style="display: flex; align-items: flex-end; gap: 30px;">
+                <div style="text-align: center; font-size: 1rem;">🧍<br>Мы</div>
+                <div style="text-align: center; font-size: 2.5rem;">🏢<br>Дом</div>
+                <div class="turbine-wrapper" style="height: 350px;">
+                    <div class="pole" style="height: 250px;"></div>
+                    <div class="rotor rotor-3" style="width: 280px; height: 280px; top: 10px; left: -50px;">
+                         <div class="blade" style="height: 120px; left: 134px;"></div><div class="blade" style="height: 120px; left: 134px;"></div><div class="blade" style="height: 120px; left: 134px;"></div><div class="hub" style="left: 132px; top: 132px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Как ветер превращается в ток?</h2>
+            <p>Это не просто "дует и крутится". Здесь работает аэродинамика, как у самолета.</p>
+            <ol>
+                <li>Ветер обтекает лопасть, создавая <strong>подъемную силу</strong>. Она заставляет ротор вращаться.</li>
+                <li>Вал ротора крутится медленно (10-20 оборотов в минуту).</li>
+                <li><strong>Мультипликатор (Редуктор):</strong> Коробка передач ускоряет вращение в 100 раз.</li>
+                <li><strong>Генератор:</strong> Быстро вращающиеся магниты создают электрический ток.</li>
+            </ol>
+        </div>
+        <div class="visual-part">
+            <div style="font-size: 3rem;">💨 + ✈️ = ⚡</div>
+            <p>Принцип крыла самолета</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Загадка количества лопастей</h2>
+            <p>Вы замечали, что почти все современные промышленные ветряки имеют именно <strong>3 лопасти</strong>? Это результат сложных расчетов.</p>
+            <ul>
+                <li><strong>1 лопасть:</strong> Нужно вешать противовес. Очень быстро крутится, создает много шума и выглядит пугающе.</li>
+                <li><strong>2 лопасти:</strong> Дешевле, но при повороте башни возникают сильные вибрации («гироскопический эффект»), ломающие конструкцию.</li>
+                <li><strong>3 лопасти:</strong> Золотая середина. Плавное вращение и высокая эффективность.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="turbine-wrapper">
+                <div class="rotor rotor-3"><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="hub"></div></div>
+                <div class="pole"></div>
+            </div>
+            <p>Стандарт индустрии</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Почему не 4 и не 10 лопастей?</h2>
+            <p>Казалось бы: больше лопастей — больше ветра поймаем?</p>
+            <p><strong>Сравнение:</strong></p>
+            <ul>
+                <li><strong>3 лопасти (Зеленый):</strong> Меньше сопротивление воздуха. Вращается БЫСТРО = Лучше для выработки тока ⚡.</li>
+                <li><strong>4+ лопасти (Синий):</strong> Каждая лопасть создает завихрения ("ветровую тень") для следующей. Вращаются МЕДЛЕННО, но с огромной силой (моментом).</li>
+            </ul>
+            <p><strong>Вывод:</strong> Многолопастные (как ромашки) используют для насосов воды, где нужна сила, а не скорость.</p>
+        </div>
+        <div class="visual-part" style="flex-direction: row; gap: 30px;">
+            <div style="text-align: center;">
+                <div class="turbine-wrapper">
+                    <div class="rotor rotor-3" style="animation-duration: 2s;"><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="hub"></div></div>
+                    <div class="pole"></div>
+                </div>
+                <p><strong>3 лопасти</strong><br>Быстро (для Тока)</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <div class="turbine-wrapper">
+                    <div class="rotor rotor-4" style="animation-duration: 4s;"><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="hub"></div></div>
+                    <div class="pole"></div>
+                </div>
+                <p style="color: var(--secondary);"><strong>4 лопасти</strong><br>Медленно (для Силы)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Умная машина</h2>
+            <p>Ветрогенератор — это робот, напичканный электроникой.</p>
+            <ul>
+                <li><strong>Анемометр:</strong> Измеряет скорость и направление ветра каждую секунду.</li>
+                <li><strong>Поворот:</strong> Электромоторы поворачивают гондолу точно на ветер.</li>
+                <li><strong>Изменение угла (Питч):</strong> Каждая лопасть может поворачиваться вокруг своей оси, чтобы ловить ветер оптимально или сбрасывать его при шторме.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big">🧠</div>
+            <p>Компьютерное управление</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Наземные ветропарки (Onshore)</h2>
+            <p>Самый распространенный тип размещения.</p>
+            <ul>
+                <li>Строятся на холмах, равнинах и побережьях.</li>
+                <li><strong>Плюс:</strong> Дешевле в строительстве и обслуживании. Легко подвести провода.</li>
+                <li><strong>Особенность:</strong> Занимают мало "реальной" земли. Фундамент занимает 1% площади, на остальных 99% фермеры выращивают пшеницу или пасут коров.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div style="position: absolute; bottom: 0; font-size: 4rem;">🐄 🚜 🌾</div>
+            <div class="turbine-wrapper" style="margin-bottom: 50px;">
+                <div class="rotor rotor-3"><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="hub"></div></div>
+                <div class="pole"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Морские гиганты (Offshore)</h2>
+            <p>Элита ветроэнергетики. Устанавливаются на шельфе морей.</p>
+            <ul>
+                <li><strong>Почему в море?</strong> Там нет холмов и лесов, ветер дует сильнее и, главное, <i>стабильнее</i>.</li>
+                <li><strong>Сложности:</strong> Агрессивная соленая среда, сложный ремонт (нужны корабли), дорогие подводные кабели.</li>
+                <li>Но одна морская турбина дает энергии в 2 раза больше наземной.</li>
+            </ul>
+        </div>
+        <div class="visual-part" style="background: linear-gradient(to top, #0984e3 0%, #74b9ff 50%, #ffffff 100%);">
+            <div class="turbine-wrapper">
+                <div class="rotor rotor-3"><div class="blade"></div><div class="blade"></div><div class="blade"></div><div class="hub"></div></div>
+                <div class="pole"></div>
+            </div>
+            <div style="position:absolute; bottom: 10px; font-size: 3rem;">🌊 🐟 🌊</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Вертикальные ветряки (VAWT)</h2>
+            <p>Не все ветряки похожи на пропеллер. Есть турбины с вертикальной осью (ротор Дарье или Савониуса).</p>
+            <ul>
+                <li><strong>Плюсы:</strong> Не нужно поворачивать на ветер (ловят с любой стороны), тихие, генератор стоит внизу (легко чинить).</li>
+                <li><strong>Минусы:</strong> Менее эффективны (КПД ниже), часто нужны моторы для раскрутки при старте.</li>
+                <li>Идеальны для города и крыш домов.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div style="font-size: 5rem; animation: spin 2s linear infinite;">🌀</div>
+            <p>Крутятся как волчок</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Где дует ветер?</h2>
+            <p>Не везде выгодно ставить ветряки. Нужна средняя скорость ветра выше 5-7 м/с.</p>
+            <ul>
+                <li><strong>Мировые лидеры:</strong> Китай (строит больше всех), США, Германия, Дания (покрывает 50% своих нужд ветром).</li>
+                <li><strong>Россия:</strong> У нас огромный потенциал! Ветропарки уже работают в Ульяновске, Адыгее, Ставропольском крае и Ростовской области.</li>
+                <li>Самые мощные ветра — на севере (Мурманск) и Дальнем Востоке.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big">🌍</div>
+            <div class="emoji-big">🇷🇺</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Аргументы "ЗА" (Плюсы)</h2>
+            <ul>
+                <li style="color: var(--primary);"><strong>Экологичность:</strong> Ноль выбросов при работе. Никакого дыма, золы и радиации.</li>
+                <li style="color: var(--primary);"><strong>Бесплатное топливо:</strong> За ветер никому не нужно платить. Цена энергии стабильна и не зависит от курса нефти.</li>
+                <li style="color: var(--primary);"><strong>Энергонезависимость:</strong> Каждая страна может добывать энергию у себя дома.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big">✅</div>
+            <div class="emoji-big">💚</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Аргументы "ПРОТИВ" (Минусы)</h2>
+            <ul>
+                <li style="color: #c0392b;"><strong>Непостоянство:</strong> Ветер может стихнуть. Нужны аккумуляторы или резервные станции.</li>
+                <li style="color: #c0392b;"><strong>Шум и вид:</strong> Некоторые люди считают, что они портят пейзаж и гудят.</li>
+                <li style="color: #c0392b;"><strong>Утилизация:</strong> Лопасти сделаны из композитов, которые пока очень трудно переработать.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big">❌</div>
+            <div class="emoji-big">🤔</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Удивительные рекорды ⚡</h2>
+            <p>Факты, в которые трудно поверить:</p>
+            <ul>
+                <li><strong>Скорость:</strong> Кончик лопасти при вращении разгоняется до <strong>300 км/ч</strong>. Это быстрее, чем болид «Формулы-1»! 🏎️</li>
+                <li><strong>Мощь:</strong> Всего <strong>один оборот</strong> современной морской турбины дает столько электричества, что хватит дому на 2 дня. 🏠</li>
+                <li><strong>Логистика:</strong> Чтобы привезти одну лопасть, нужны грузовики длиной с поезд, и иногда приходится временно сносить светофоры на улицах.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div style="font-size: 3rem;">🏎️ 💨 🏠</div>
+            <p style="text-align:center; margin-top:20px;">Быстрее Ferrari!</p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h2>Взгляд в будущее</h2>
+            <p>Технологии развиваются стремительно:</p>
+            <ul>
+                <li><strong>Летающие ветряки:</strong> Аппараты, похожие на воздушных змеев или дирижабли, будут ловить ветер на высоте 500+ метров, где он дует всегда.</li>
+                <li><strong>Безлопастные турбины:</strong> Столбы, которые вибрируют от ветра (Vortex).</li>
+                <li><strong>Водород:</strong> Ветряки будут производить "зеленый водород" для топлива будущего.</li>
+            </ul>
+        </div>
+        <div class="visual-part">
+            <div class="emoji-big">🪁</div>
+            <div class="emoji-big">🔋</div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="text-part">
+            <h1>Спасибо за внимание!</h1>
+            <p>Ветер дул миллионы лет назад, и будет дуть всегда. Наша задача — научиться жить в гармонии с этой силой.</p>
+            <p style="margin-top: 30px;"><strong>Готов ответить на ваши вопросы!</strong></p>
+        </div>
+        <div class="visual-part" style="background: var(--primary);">
+            <div class="turbine-wrapper">
+                <div class="rotor rotor-3"><div class="blade" style="background: white;"></div><div class="blade" style="background: white;"></div><div class="blade" style="background: white;"></div><div class="hub" style="background: var(--bg);"></div></div>
+                <div class="pole" style="background: rgba(255,255,255,0.5);"></div>
+            </div>
+            <div style="color: white; font-size: 2em; margin-top: 20px;">Будущее чистое!</div>
+        </div>
+    </div>
+
+    <div class="progress" id="progressBar"></div>
+    <div class="counter" id="slideCounter">1 / 21</div>
+    
+    <div class="controls">
+        <button onclick="prevSlide()">&#8592; Назад</button>
+        <button onclick="nextSlide()">Вперед &#8594;</button>
+    </div>
+
+</div>
+
+<script>
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const progress = document.getElementById('progressBar');
+    const counter = document.getElementById('slideCounter');
+
+    function show(index) {
+        if (index >= slides.length) index = 0;
+        if (index < 0) index = slides.length - 1;
+        
+        slides.forEach(slide => slide.classList.remove('active'));
+        current = index;
+        slides[current].classList.add('active');
+        
+        // Обновляем прогресс
+        const percent = ((current + 1) / slides.length) * 100;
+        progress.style.width = percent + '%';
+        counter.innerText = (current + 1) + " / " + slides.length;
+    }
+
+    function nextSlide() { show(current + 1); }
+    function prevSlide() { show(current - 1); }
+
+    // Клавиши
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+        if(e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Старт
+    show(0);
+</script>
+
+</body>
+</html>
