@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arduino Professional Course</title>
+    <style>
+        /* --- THEME SETTINGS --- */
+        :root {
+            --bg-color: #1e1e1e;       /* VS Code Dark Background */
+            --panel-color: #252526;    /* Lighter panel */
+            --text-primary: #d4d4d4;   /* Main text */
+            --accent-blue: #007acc;    /* VS Code Blue */
+            --accent-green: #4ec9b0;   /* Class/Type color */
+            --accent-yellow: #dcdcaa;  /* Function color */
+            --code-bg: #101010;        /* Black code background */
+            --border: #333;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', 'Roboto Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- BACKGROUND GRID EFFECT --- */
+        .grid-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        /* --- SLIDES --- */
+        .viewport {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+        }
+
+        .slide {
+            display: none;
+            width: 85%;
+            max-width: 1200px;
+            height: auto;
+            min-height: 60%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px;
+            box-sizing: border-box;
+            background: rgba(30, 30, 30, 0.8); /* Slight dimming behind text */
+            border: 1px solid #333;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .slide.active { display: flex; }
+        .center-content { align-items: center; text-align: center; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- TYPOGRAPHY --- */
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #fff;
+            font-weight: 300;
+            line-height: 1.2;
+        }
+        h1 span { color: var(--accent-blue); font-weight: 600; }
+
+        h2 {
+            font-size: 1.4rem;
+            color: #608b4e; /* Comment green */
+            margin-bottom: 30px;
+            font-family: 'Courier New', monospace;
+            border-bottom: 2px solid var(--accent-blue);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        p, li {
+            font-size: 1.6rem;
+            line-height: 1.6;
+            max-width: 1100px;
+            margin-bottom: 15px;
+            color: #cccccc;
+        }
+
+        ul { padding-left: 20px; }
+        li { list-style: none; margin-bottom: 10px; }
+        li::before { content: ">> "; color: var(--accent-blue); font-weight: bold; }
+
+        /* --- CODE & DIAGRAMS --- */
+        .code-panel {
+            background: var(--code-bg);
+            border-left: 5px solid var(--accent-blue);
+            padding: 20px;
+            width: 100%;
+            font-family: 'Consolas', monospace;
+            font-size: 1.5rem;
+            color: #d4d4d4;
+            margin: 20px 0;
+            box-sizing: border-box;
+        }
+        .k { color: #569cd6; } /* keyword */
+        .t { color: #4ec9b0; } /* type */
+        .f { color: #dcdcaa; } /* function */
+        .n { color: #b5cea8; } /* number */
+        .c { color: #6a9955; } /* comment */
+
+        .wire-instruction {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1.6rem;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #444;
+        }
+        .wire-red { border-left: 8px solid #f44336; }
+        .wire-black { border-left: 8px solid #757575; }
+        .wire-blue { border-left: 8px solid #2196f3; }
+        .arrow { margin: 0 20px; color: #666; }
+
+        /* --- CONTROLS --- */
+        .footer {
+            height: 70px;
+            background: var(--panel-color);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 10;
+        }
+        button {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 10px 30px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+        button:hover { background: var(--accent-blue); border-color: var(--accent-blue); }
+        .counter { font-family: monospace; color: #888; font-size: 1.2rem; }
+
+    </style>
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+
+    <div class="viewport">
+
+        <div class="slide active center-content">
+            <h1>SYSTEM: <span>PARKTRONIC</span></h1>
+            <h2>LESSON_01: SAFETY SYSTEMS</h2>
+            <p>Профессиональный курс по созданию умных устройств.</p>
+        </div>
+
+        <div class="slide">
+            <h1>01. План урока</h1>
+            <ul>
+                <li>Теория микроконтроллеров (10 мин)</li>
+                <li>Инженерная сборка схемы (20 мин)</li>
+                <li>Программирование на C++ (20 мин)</li>
+                <li>Отладка и тесты (10 мин)</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h1>02. Проблема</h1>
+            <p>Статистика ДТП при парковке:</p>
+            <ul>
+                <li>30% аварий происходят задним ходом.</li>
+                <li>Причина: "Слепая зона" зеркал.</li>
+                <li>Решение: Акустический сенсор (Парктроник).</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h1>03. Наше решение</h1>
+            <p>Мы создадим копию системы Tesla:</p>
+            <ol>
+                <li>Датчик замеряет дистанцию (см).</li>
+                <li>Контроллер вычисляет степень угрозы.</li>
+                <li>Система подает световые и звуковые сигналы.</li>
+            </ol>
+        </div>
+
+        <div class="slide">
+            <h1>04. Инструментарий</h1>
+            <p>Среда разработки: <b>Tinkercad Circuits</b>.</p>
+            <p>Почему не реальное железо?</p>
+            <ul>
+                <li>Мгновенная сборка.</li>
+                <li>Невозможно сжечь компоненты.</li>
+                <li>Встроенный осциллограф и монитор порта.</li>
+            </ul>
+        </div>
+
+        <div class="slide center-content">
+            <h1>MODULE: <span>THEORY</span></h1>
+            <h2>HARDWARE ARCHITECTURE</h2>
+        </div>
+
+        <div class="slide">
+            <h1>06. Arduino Uno</h1>
+            <p>Центральный процессор (ATmega328P).</p>
+            <div class="code-panel">
+> Clock Speed: 16 MHz
+> Digital I/O: 14 Pins
+> Voltage: 5V
+            </div>
+            <p>Это мозг, который выполняет наш код строка за строкой.</p>
+        </div>
+
+        <div class="slide">
+            <h1>07. Макетная плата</h1>
+            <p>Breadboard — устройство для прототипирования.</p>
+            <ul>
+                <li><b>Шина питания (+/-):</b> Вертикальные линии.</li>
+                <li><b>Терминальные полосы:</b> Горизонтальные линии (A-E, F-J).</li>
+            </ul>
+            <p>Внутри пластика скрыты металлические контакты.</p>
+        </div>
+
+        <div class="slide">
+            <h1>08. Датчик HC-SR04</h1>
+            <p>Принцип: SONAR (Sound Navigation Ranging).</p>
+            <ul>
+                <li><b>TRIG (Trigger):</b> Излучатель. Посылает ультразвук.</li>
+                <li><b>ECHO (Receiver):</b> Приемник. Ловит отраженную волну.</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h1>09. Физика измерения</h1>
+            <p>Формула расчета:</p>
+            <div class="code-panel">
+Distance = (Time * SpeedOfSound) / 2
+            </div>
+            <p>Делим на 2, так как звук летит до стены и обратно.</p>
+        </div>
+
+        <div class="slide">
+            <h1>10. Светодиод (LED)</h1>
+            <p>Полупроводниковый прибор.</p>
+            <p style="color: #f44336; font-weight: bold;">ВАЖНО: Имеет полярность.</p>
+            <ul>
+                <li><b>Анод (Длинная нога):</b> Плюс (+).</li>
+                <li><b>Катод (Короткая нога):</b> Минус (-).</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h1>11. Резистор</h1>
+            <p>Ограничитель тока.</p>
+            <p>Если подключить LED к 5V напрямую — он сгорит за 0.1 сек.</p>
+            <p>Мы используем резистор <b>220 Ом</b> для защиты.</p>
+        </div>
+
+        <div class="slide">
+            <h1>12. Пьезо-излучатель</h1>
+            <p>Piezo Buzzer.</p>
+            <p>Преобразует электрические колебания в звук.</p>
+            <p>Управляя частотой тока, мы меняем высоту ноты.</p>
+        </div>
+
+        <div class="slide center-content">
+            <h1>MODULE: <span>ASSEMBLY</span></h1>
+            <h2>ENGINEERING PROCESS</h2>
+        </div>
+
+        <div class="slide">
+            <h1>14. Старт проекта</h1>
+            <p>1. Создайте новый проект (New Circuit).</p>
+            <p>2. Перетащите <b>Arduino Uno</b>.</p>
+            <p>3. Перетащите <b>Breadboard Small</b>.</p>
+        </div>
+
+        <div class="slide">
+            <h1>15. Питание: Плюс</h1>
+            <p>Подключаем основное питание к макетке.</p>
+            <div class="wire-instruction wire-red">
+                5V <span class="arrow">---></span> Рельса (+)
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>16. Питание: Земля</h1>
+            <p>Замыкаем цепь.</p>
+            <div class="wire-instruction wire-black">
+                GND <span class="arrow">---></span> Рельса (-)
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>17. Монтаж Датчика</h1>
+            <p>Найдите <b>Ultrasonic Distance Sensor</b> (4 пина).</p>
+            <p>Установите его на макетную плату (например, в отверстия E1, E2, E3, E4).</p>
+        </div>
+
+        <div class="slide">
+            <h1>18. Датчик: Питание</h1>
+            <p>Подключаем VCC датчика к энергии.</p>
+            <div class="wire-instruction wire-red">
+                Sensor VCC <span class="arrow">---></span> Рельса (+)
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>19. Датчик: Земля</h1>
+            <p>Подключаем GND датчика.</p>
+            <div class="wire-instruction wire-black">
+                Sensor GND <span class="arrow">---></span> Рельса (-)
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>20. Датчик: Сигнал TRIG</h1>
+            <p>Управление излучателем.</p>
+            <div class="wire-instruction wire-blue">
+                Sensor TRIG <span class="arrow">---></span> PIN 12
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>21. Датчик: Сигнал ECHO</h1>
+            <p>Чтение приемника.</p>
+            <div class="wire-instruction wire-blue">
+                Sensor ECHO <span class="arrow">---></span> PIN 11
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>22. Монтаж Светодиодов</h1>
+            <p>Установите 3 светодиода в ряд:</p>
+            <ul>
+                <li>Зеленый</li>
+                <li>Желтый</li>
+                <li>Красный</li>
+            </ul>
+            <p><i>Катоды (короткие ноги) должны смотреть в одну сторону.</i></p>
+        </div>
+
+        <div class="slide">
+            <h1>23. Монтаж Резисторов</h1>
+            <p>Для каждого светодиода:</p>
+            <div class="wire-instruction">
+                Катод (Короткая нога) <span class="arrow">---></span> Резистор <span class="arrow">---></span> Рельса (-)
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>24. Подключение: Зеленый</h1>
+            <p>Индикация безопасности.</p>
+            <div class="wire-instruction wire-blue">
+                Анод Зеленого <span class="arrow">---></span> PIN 5
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>25. Подключение: Желтый</h1>
+            <p>Индикация предупреждения.</p>
+            <div class="wire-instruction wire-blue">
+                Анод Желтого <span class="arrow">---></span> PIN 6
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>26. Подключение: Красный</h1>
+            <p>Индикация тревоги.</p>
+            <div class="wire-instruction wire-blue">
+                Анод Красного <span class="arrow">---></span> PIN 7
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>27. Монтаж Динамика</h1>
+            <p>Установите <b>Piezo</b> на плату.</p>
+            <div class="wire-instruction wire-black">
+                Черный провод <span class="arrow">---></span> Рельса (-)
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>28. Подключение Звука</h1>
+            <p>Управление тональностью.</p>
+            <div class="wire-instruction wire-red">
+                Красный провод <span class="arrow">---></span> PIN 8
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>29. Проверка сборки</h1>
+            <p>Чек-лист инженера:</p>
+            <ul>
+                <li>[ ] Питание на рельсах есть?</li>
+                <li>[ ] Резисторы на минусах светодиодов стоят?</li>
+                <li>[ ] Датчик подключен к 11 и 12?</li>
+            </ul>
+        </div>
+
+        <div class="slide center-content">
+            <h1>MODULE: <span>SOFTWARE</span></h1>
+            <h2>BACKEND LOGIC (C++)</h2>
+        </div>
+
+        <div class="slide">
+            <h1>31. Подготовка IDE</h1>
+            <p>1. Нажмите кнопку <b>Code</b>.</p>
+            <p>2. Выберите режим <b>Text</b>.</p>
+            <p>3. Очистите окно редактора.</p>
+        </div>
+
+        <div class="slide">
+            <h1>32. Переменные</h1>
+            <p>Назначаем имена пинам.</p>
+            <div class="code-panel">
+<span class="k">int</span> trig = <span class="n">12</span>;
+<span class="k">int</span> echo = <span class="n">11</span>;
+<span class="k">int</span> beep = <span class="n">8</span>;
+<span class="k">int</span> green = <span class="n">5</span>;
+<span class="k">int</span> yellow = <span class="n">6</span>;
+<span class="k">int</span> red = <span class="n">7</span>;
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>33. Void Setup (Датчики)</h1>
+            <p>Настройка портов ввода/вывода.</p>
+            <div class="code-panel">
+<span class="k">void</span> <span class="f">setup</span>() {
+  <span class="f">pinMode</span>(trig, <span class="k">OUTPUT</span>);
+  <span class="f">pinMode</span>(echo, <span class="k">INPUT</span>);
+  <span class="f">pinMode</span>(beep, <span class="k">OUTPUT</span>);
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>34. Void Setup (Свет)</h1>
+            <p>Настройка светодиодов.</p>
+            <div class="code-panel">
+  <span class="f">pinMode</span>(green, <span class="k">OUTPUT</span>);
+  <span class="f">pinMode</span>(yellow, <span class="k">OUTPUT</span>);
+  <span class="f">pinMode</span>(red, <span class="k">OUTPUT</span>);
+  
+  <span class="f">Serial</span>.<span class="f">begin</span>(<span class="n">9600</span>);
+}
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>35. Void Loop (Импульс)</h1>
+            <p>Генерация ультразвука.</p>
+            <div class="code-panel">
+<span class="k">void</span> <span class="f">loop</span>() {
+  <span class="k">long</span> duration, cm;
+
+  <span class="f">digitalWrite</span>(trig, <span class="k">LOW</span>); 
+  <span class="f">delayMicroseconds</span>(<span class="n">2</span>);
+  <span class="f">digitalWrite</span>(trig, <span class="k">HIGH</span>); 
+  <span class="f">delayMicroseconds</span>(<span class="n">10</span>);
+  <span class="f">digitalWrite</span>(trig, <span class="k">LOW</span>);
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>36. Void Loop (Расчет)</h1>
+            <p>Прием эха и математика.</p>
+            <div class="code-panel">
+  duration = <span class="f">pulseIn</span>(echo, <span class="k">HIGH</span>);
+  
+  <span class="c">// 58 - коэффициент для см</span>
+  cm = duration / <span class="n">58</span>;
+  
+  <span class="f">Serial</span>.<span class="f">println</span>(cm);
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>37. Логика (Сброс)</h1>
+            <p>Гасим все перед проверкой.</p>
+            <div class="code-panel">
+  <span class="f">digitalWrite</span>(green, <span class="k">LOW</span>);
+  <span class="f">digitalWrite</span>(yellow, <span class="k">LOW</span>);
+  <span class="f">digitalWrite</span>(red, <span class="k">LOW</span>);
+  <span class="f">noTone</span>(beep);
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>38. Условия: Зеленый</h1>
+            <p>Дистанция > 100 см.</p>
+            <div class="code-panel">
+  <span class="k">if</span> (cm > <span class="n">100</span>) {
+    <span class="f">digitalWrite</span>(green, <span class="k">HIGH</span>);
+  }
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>39. Условия: Желтый</h1>
+            <p>Дистанция от 30 до 100 см.</p>
+            <div class="code-panel">
+  <span class="k">else if</span> (cm > <span class="n">30</span>) {
+    <span class="f">digitalWrite</span>(yellow, <span class="k">HIGH</span>);
+    <span class="f">tone</span>(beep, <span class="n">500</span>);
+  }
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>40. Условия: Красный</h1>
+            <p>Дистанция < 30 см (Критическая).</p>
+            <div class="code-panel">
+  <span class="k">else</span> {
+    <span class="f">digitalWrite</span>(red, <span class="k">HIGH</span>);
+    <span class="f">tone</span>(beep, <span class="n">1000</span>);
+  }
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>41. Финализация</h1>
+            <p>Закрываем цикл.</p>
+            <div class="code-panel">
+  <span class="f">delay</span>(<span class="n">100</span>);
+}
+            </div>
+        </div>
+
+        <div class="slide center-content">
+            <h1>MODULE: <span>TESTING</span></h1>
+            <h2>DEBUG & UPGRADES</h2>
+        </div>
+
+        <div class="slide">
+            <h1>43. Запуск симуляции</h1>
+            <p>Алгоритм теста:</p>
+            <ol>
+                <li>Нажмите <b>Start Simulation</b>.</li>
+                <li>Кликните на датчик.</li>
+                <li>Перемещайте точку-объект.</li>
+                <li>Следите за консолью (Serial Monitor).</li>
+            </ol>
+        </div>
+
+        <div class="slide">
+            <h1>44. Отладка</h1>
+            <p>Если не работает:</p>
+            <ul>
+                <li>Горит все время красный? (Проверь Trig/Echo).</li>
+                <li>Не горит свет? (Проверь полярность диодов).</li>
+                <li>Нет звука? (Проверь 8 пин).</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h1>45. Задание №1</h1>
+            <h2>Полицейский стробоскоп</h2>
+            <p>Измените код в блоке <code>else</code> (Красная зона), чтобы свет мигал.</p>
+            <div class="code-panel">
+delay(50); digitalWrite(red, LOW); delay(50);
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>46. Задание №2</h1>
+            <h2>Прерывистый зуммер</h2>
+            <p>Сделайте звук в желтой зоне прерывистым ("Пик... Пик...").</p>
+            <p>Используйте <code>noTone()</code> и <code>delay()</code>.</p>
+        </div>
+
+        <div class="slide">
+            <h1>47. Задание №3 (Pro)</h1>
+            <h2>Точная парковка</h2>
+            <p>Если расстояние равно 50 см (+/- 1см), включить ВСЕ светодиоды.</p>
+            <div class="code-panel">
+if (cm >= 49 && cm <= 51) { ... }
+            </div>
+        </div>
+
+        <div class="slide">
+            <h1>48. Анализ результата</h1>
+            <p>Мы создали систему с обратной связью.</p>
+            <ul>
+                <li>Input: Дистанция.</li>
+                <li>Processing: C++ Логика.</li>
+                <li>Output: Свет и Звук.</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h1>49. Домашнее задание</h1>
+            <p>Проект "Умный дом":</p>
+            <p>Используйте этот же датчик, чтобы включать свет в комнате, когда кто-то входит.</p>
+        </div>
+
+        <div class="slide center-content">
+            <h1>SESSION <span>COMPLETED</span></h1>
+            <h2>THANK YOU</h2>
+            <p>Arduino Masterclass</p>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <button onclick="changeSlide(-1)">PREVIOUS</button>
+        <span class="counter" id="counter">01 / 50</span>
+        <button onclick="changeSlide(1)">NEXT</button>
+    </div>
+
+    <script>
+        let current = 0;
+        const slides = document.querySelectorAll('.slide');
+        const counter = document.getElementById('counter');
+
+        function show(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            if (index >= slides.length) index = slides.length - 1;
+            if (index < 0) index = 0;
+            
+            slides[index].classList.add('active');
+            current = index;
+            counter.innerText = `${String(current + 1).padStart(2, '0')} / ${slides.length}`;
+        }
+
+        function changeSlide(dir) {
+            show(current + dir);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+        });
+
+        show(0);
+    </script>
+</body>
+</html>
